@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <cstdio>
 #include <vector>
@@ -11,7 +12,6 @@ class toAnki {
     unordered_set<string> partsOfSpeech;
     ifstream input;
     ofstream output;
-    string buffer;
 
   public:
     toAnki(string inputFile = "plecoExport.txt", 
@@ -29,23 +29,48 @@ class toAnki {
     }
 
     bool plecoToAnki() {
-        while (getline (input, buffer, '\t')) {
+        string buffer;
+        while (getline (input, buffer)) {
+            stringstream ss(buffer);
             // simplified characters
+            getline(ss, buffer, '\t');
             output << buffer << '\t';
             // pinyin
-            getline (input, buffer, '\t');
+            getline (ss, buffer, '\t');
             output << buffer << '\t';
             // definition
-            getline (input, buffer);
-            output << buffer << endl;
-
-
-            //output << "<ol><li>";
-            //for (int i = 0; i < buffer.size(); i++) {
-
-            //}
-            //output << "</ol>";
+            formatPlecoDefinition(ss);
         }
+    }
+
+    void formatPlecoDefinition(stringstream& ss) {
+        if (!ss.good()) return;
+        output << "<ol>";
+        string buffer;
+        bool insertNewline = true;
+        while (ss >> buffer) {
+            if (isNumber(buffer)) {
+                insertNewline = true;
+            }
+            else if (isPartOfSpeech(buffer)) {
+                insertNewline = true;
+            }
+            else if (buffer[buffer.length() - 1] == ';') {
+                if (insertNewline) {
+                    output << "<li>";
+                }
+                output << buffer.substr(0, buffer.length() - 1);
+                insertNewline = true;
+            }
+            else {
+                if (insertNewline) {
+                    output << "<li>";
+                }
+                output << buffer << " ";
+                insertNewline = false;
+            }
+        }
+        output << "</ol>" << endl;
     }
 
     void createPartsOfSpeechSet() {
@@ -57,17 +82,32 @@ class toAnki {
         }
     }
 
-    bool isPartOfSpeech(string s) {
+    inline bool isPartOfSpeech(string s) {
         if (partsOfSpeech.find(s) != partsOfSpeech.end()) {
             return true;
         }
         return false;
+    }
+
+    inline bool isNumber(string s) {
+        for (int i = 0; i < s.size(); i++) {
+            if (s[i] < '0' || s[i] > '9') {
+                return false;
+            }
+        }
+        return true;
+    }
+    inline bool isNumber(char c) {
+        if (c < '0' || c > '9') {
+            return false;
+        }
+        return true;
     }
 };
 
 int main() {
     toAnki myConverter("plecoExport.txt", "ankiImport.txt");
     myConverter.plecoToAnki();
-    
+
     return 0;
 }

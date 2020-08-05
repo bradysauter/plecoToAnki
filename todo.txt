@@ -1,0 +1,8 @@
+EXTENSIONS----------------------------------
+- search CC-CEDICT directly (?)
+- flag for simplified vs traditional (or both)
+- auto import into anki (?)
+- DATED definitions EX: 狠
+- well-known-phrase EX: 原来如此
+- 录像 - VERB separates 2 definitions, need to insert an <li>
+		
